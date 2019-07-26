@@ -6,9 +6,9 @@ import static com.tekartik.sqflite.Constant.PARAM_LOG_LEVEL;
 
 public class LogLevel {
 
-    static final int none = 0;
-    static final int sql = 1;
-    static final int verbose = 2;
+    public static final int none = 0;
+    public static final int sql = 1;
+    public static final int verbose = 2;
 
     static Integer getLogLevel(MethodCall methodCall) {
         return methodCall.argument(PARAM_LOG_LEVEL);

@@ -754,9 +754,9 @@ public class SqflitePlugin implements MethodCallHandler {
                                 // force opening
                                 try {
                                     if (Boolean.TRUE.equals(readOnly)) {
-                                        database.openReadOnly();
+                                        database.openReadOnly(handler);
                                     } else {
-                                        database.open();
+                                        database.open(handler);
                                     }
                                 } catch (Exception e) {
                                     MethodCallOperation operation = new MethodCallOperation(call, bgResult);
