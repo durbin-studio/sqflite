@@ -1,5 +1,6 @@
 package com.tekartik.sqflite;
 
+import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Handler;
 import android.util.Log;
@@ -20,6 +21,7 @@ public class Database {
             sqliteDatabaseSingleInstance = new ConcurrentHashMap<>();
     private static volatile Handler dbHandler;
     private static volatile boolean readOnly;
+
 
     public Database(String path, int id, boolean singleInstance, int logLevel) {
         this.path = path;
@@ -46,7 +48,16 @@ public class Database {
             synchronized (Database.class) {
                 if (!sqliteDatabaseSingleInstance.containsKey(path)) {
                     SQLiteDatabase dbInstance = SQLiteDatabase.openDatabase(path, null,
-                            flags);
+                            flags, new DatabaseErrorHandler() {
+                                @Override
+                                public void onCorruption(SQLiteDatabase dbObj) {
+                                    // ignored
+                                    // default implementation delete the file
+                                    //
+                                    // This happens asynchronously so cannot be tracked. However a simple
+                                    // access should fail
+                                }
+                            });
                     SQLiteDatabase previousDatabase = sqliteDatabaseSingleInstance.putIfAbsent(path, dbInstance);
                     // Check if the newly created instance was successfully added to the concurrent map
                     // If someone beat us to it, delete our second connection which will not be used
@@ -67,7 +78,16 @@ public class Database {
     public void openReadOnly(Handler handler) {
         if (!singleInstance) {
             sqliteDatabase = SQLiteDatabase.openDatabase(path, null,
-                    SQLiteDatabase.OPEN_READONLY);
+                    SQLiteDatabase.OPEN_READONLY, new DatabaseErrorHandler() {
+                        @Override
+                        public void onCorruption(SQLiteDatabase dbObj) {
+                            // ignored
+                            // default implementation delete the file
+                            //
+                            // This happens asynchronously so cannot be tracked. However a simple
+                            // access should fail
+                        }
+                    });
         } else {
             openSingleInstance(path, true, SQLiteDatabase.OPEN_READONLY, handler);
         }
