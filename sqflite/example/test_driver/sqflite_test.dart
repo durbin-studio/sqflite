@@ -105,7 +105,7 @@ void main() {
       try {
         var version = await db.getVersion();
         print(await db.query('sqlite_master'));
-        fail('getVersion should fail ${db?.path} ${version}');
+        fail('getVersion should fail ${db?.path} $version');
       } on DatabaseException catch (_) {
         // Android: DatabaseException(file is not a database (code 26 SQLITE_NOTADB)) sql 'PRAGMA user_version' args []}
       }
@@ -198,6 +198,14 @@ void main() {
       } finally {
         await db.close();
       }
+    });
+
+    test('indexed_param', () async {
+      final db = await openDatabase(':memory:');
+      expect(await db.rawQuery('SELECT ?1 + ?2', [3, 4]), [
+        {'?1 + ?2': 7}
+      ]);
+      await db.close();
     });
   });
 }

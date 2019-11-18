@@ -21,6 +21,7 @@ public class Database {
             sqliteDatabaseSingleInstance = new ConcurrentHashMap<>();
     private static volatile Handler dbHandler;
     private static volatile boolean readOnly;
+    boolean inTransaction;
 
 
     public Database(String path, int id, boolean singleInstance, int logLevel) {
@@ -117,7 +118,7 @@ public class Database {
         try {
             return sqliteDatabase.enableWriteAheadLogging();
         } catch (Exception e) {
-            Log.e(TAG, "enable WAL error: " + e);
+            Log.e(TAG, getThreadLogPrefix() + "enable WAL error: " + e);
             return false;
         }
     }
@@ -126,5 +127,9 @@ public class Database {
         Thread thread = Thread.currentThread();
 
         return "" + id + "," + thread.getName() + "(" + thread.getId() + ")";
+    }
+
+    String getThreadLogPrefix() {
+        return "[" + getThreadLogTag() + "] ";
     }
 }

@@ -2,6 +2,8 @@ package com.tekartik.sqflite;
 
 import android.util.Log;
 
+import com.tekartik.sqflite.dev.Debug;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import static com.tekartik.sqflite.Constant.TAG;
-import com.tekartik.sqflite.dev.Debug;
 
 public class SqlCommand {
     public String getSql() {
@@ -70,6 +71,11 @@ public class SqlCommand {
         for (int i = 0; i < sqlLength; i++) {
             char ch = sql.charAt(i);
             if (ch == '?') {
+                // If it is followed by a number
+                // it is an indexed param, cancel our weird conversion
+                if ((i + 1 < sqlLength) && Character.isDigit(sql.charAt(i + 1))) {
+                    return this;
+                }
                 count++;
                 // no match, return the same
                 if (argumentIndex >= rawArguments.size()) {

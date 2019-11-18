@@ -34,7 +34,7 @@ abstract class DatabaseExecutor {
   /// Returns the last inserted record id
   Future<int> rawInsert(String sql, [List<dynamic> arguments]);
 
-  // INSERT helper
+  /// INSERT helper
   Future<int> insert(String table, Map<String, dynamic> values,
       {String nullColumnHack, ConflictAlgorithm conflictAlgorithm});
 
@@ -118,9 +118,6 @@ abstract class DatabaseExecutor {
   /// You may include ?s in the where clause, which will be replaced by the
   /// values from [whereArgs]
   ///
-  /// [conflictAlgorithm] (optional) specifies algorithm to use in case of a
-  /// conflict. See [ConflictResolver] docs for more details
-  ///
   /// Returns the number of rows affected if a whereClause is passed in, 0
   /// otherwise. To remove all rows and get a count pass "1" as the
   /// whereClause.
@@ -178,10 +175,28 @@ abstract class Database implements DatabaseExecutor {
       [List<dynamic> arguments]);
 }
 
+/// Prototype of the function called when the version has changed.
+///
+/// Schema migration (adding column, adding table, adding trigger...)
+/// should happen here.
 typedef OnDatabaseVersionChangeFn = FutureOr<void> Function(
     Database db, int oldVersion, int newVersion);
+
+/// Prototype of the function called when the database is created.
+///
+/// Database intialization (creating tables, views, triggers...)
+/// should happen here.
 typedef OnDatabaseCreateFn = FutureOr<void> Function(Database db, int version);
+
+/// Prototype of the function called when the database is open.
+///
+/// Post initialization should happen here.
 typedef OnDatabaseOpenFn = FutureOr<void> Function(Database db);
+
+/// Prototype of the function called before calling [onCreate]/[onUpdate]/[onOpen]
+/// when the database is open.
+///
+/// Post initialization should happen here.
 typedef OnDatabaseConfigureFn = FutureOr<void> Function(Database db);
 
 /// to specify during [openDatabase] for [onDowngrade]
@@ -195,7 +210,10 @@ Future<void> __onDatabaseDowngradeDelete(
     Database db, int oldVersion, int newVersion) async {
   // Implementation is hidden implemented in openDatabase._onDatabaseDowngradeDelete
 }
-// Downgrading will delete the database and open it again
+
+/// Downgrading will delete the database and open it again.
+///
+/// To set in [onDowngrade] if you want to delete everything on downgrade.
 final OnDatabaseVersionChangeFn onDatabaseDowngradeDelete =
     __onDatabaseDowngradeDelete;
 
@@ -204,6 +222,57 @@ final OnDatabaseVersionChangeFn onDatabaseDowngradeDelete =
 /// see [openDatabase] for details
 ///
 abstract class OpenDatabaseOptions {
+  /// Open the database at a given path
+  ///
+  /// [version] (optional) specifies the schema version of the database being
+  /// opened. This is used to decide whether to call [onCreate], [onUpgrade],
+  /// and [onDowngrade]
+  ///
+  /// The optional callbacks are called in the following order:
+  ///
+  /// 1. [onConfigure]
+  /// 2. [onCreate] or [onUpgrade] or [onDowngrade]
+  /// 5. [onOpen]
+  ///
+  /// [onConfigure] is the first callback invoked when opening the database. It
+  /// allows you to perform database initialization such as enabling foreign keys
+  /// or write-ahead logging
+  ///
+  /// If [version] is specified, [onCreate], [onUpgrade], and [onDowngrade] can
+  /// be called. These functions are mutually exclusive — only one of them can be
+  /// called depending on the context, although they can all be specified to
+  /// cover multiple scenarios
+  ///
+  /// [onCreate] is called if the database did not exist prior to calling
+  /// [openDatabase]. You can use the opportunity to create the required tables
+  /// in the database according to your schema
+  ///
+  /// [onUpgrade] is called if either of the following conditions are met:
+  ///
+  /// 1. [onCreate] is not specified
+  /// 2. The database already exists and [version] is higher than the last
+  /// database version
+  ///
+  /// In the first case where [onCreate] is not specified, [onUpgrade] is called
+  /// with its [oldVersion] parameter as `0`. In the second case, you can perform
+  /// the necessary migration procedures to handle the differing schema
+  ///
+  /// [onDowngrade] is called only when [version] is lower than the last database
+  /// version. This is a rare case and should only come up if a newer version of
+  /// your code has created a database that is then interacted with by an older
+  /// version of your code. You should try to avoid this scenario
+  ///
+  /// [onOpen] is the last optional callback to be invoked. It is called after
+  /// the database version has been set and before [openDatabase] returns
+  ///
+  /// When [readOnly] (false by default) is true, all other parameters are
+  /// ignored and the database is opened as-is
+  ///
+  /// When [singleInstance] is true (the default), a single database instance is
+  /// returned for a given path. Subsequent calls to [openDatabase] with the
+  /// same path will return the same instance, and will discard all other
+  /// parameters such as callbacks for that invocation.
+  ///
   factory OpenDatabaseOptions(
       {int version,
       OnDatabaseConfigureFn onConfigure,
@@ -224,13 +293,30 @@ abstract class OpenDatabaseOptions {
         singleInstance: singleInstance);
   }
 
+  /// Specify the expected version.
   int version;
+
+  /// called right after opening the database.
   OnDatabaseConfigureFn onConfigure;
+
+  /// Called when the database is created.
   OnDatabaseCreateFn onCreate;
+
+  /// Called when the database is upgraded.
   OnDatabaseVersionChangeFn onUpgrade;
+
+  /// Called when the database is downgraded.
+  ///
+  /// Use [onDatabaseDowngradeDelete] for re-creating the database
   OnDatabaseVersionChangeFn onDowngrade;
+
+  /// Called after all other callbacks have been called.
   OnDatabaseOpenFn onOpen;
+
+  /// Open the database in read-only mode (no callback called).
   bool readOnly;
+
+  /// The existing single-instance (hot-restart)
   bool singleInstance;
 }
 
