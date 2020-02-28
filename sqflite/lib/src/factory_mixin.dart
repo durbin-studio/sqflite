@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:path/path.dart';
 import 'package:sqflite/sqlite_api.dart';
@@ -8,6 +7,7 @@ import 'package:sqflite/src/database.dart';
 import 'package:sqflite/src/database_mixin.dart';
 import 'package:sqflite/src/exception.dart';
 import 'package:sqflite/src/factory.dart';
+import 'package:sqflite/src/mixin/factory.dart';
 import 'package:sqflite/src/open_options.dart';
 import 'package:synchronized/synchronized.dart';
 
@@ -15,10 +15,11 @@ import 'package:synchronized/synchronized.dart';
 abstract class SqfliteDatabaseFactoryBase with SqfliteDatabaseFactoryMixin {}
 
 /// Common factory mixin
-mixin SqfliteDatabaseFactoryMixin implements SqfliteDatabaseFactory {
+mixin SqfliteDatabaseFactoryMixin
+    implements SqfliteDatabaseFactory, SqfliteInvokeHandler {
   /// To override to wrap wanted exception
   @override
-  Future<T> wrapDatabaseException<T>(Future<T> action()) => action();
+  Future<T> wrapDatabaseException<T>(Future<T> Function() action) => action();
 
   Future<T> safeInvokeMethod<T>(String method, [dynamic arguments]) =>
       wrapDatabaseException(() => invokeMethod(method, arguments));
@@ -119,9 +120,13 @@ mixin SqfliteDatabaseFactoryMixin implements SqfliteDatabaseFactory {
 
   @override
   Future<void> deleteDatabase(String path) async {
-    path = await fixPath(path);
-    return safeInvokeMethod<void>(
-        methodDeleteDatabase, <String, dynamic>{paramPath: path});
+    return lock.synchronized(() async {
+      path = await fixPath(path);
+      // Handle already single instance open database
+      removeDatabaseOpenHelper(path);
+      return safeInvokeMethod<void>(
+          methodDeleteDatabase, <String, dynamic>{paramPath: path});
+    });
   }
 
   @override
@@ -140,26 +145,11 @@ mixin SqfliteDatabaseFactoryMixin implements SqfliteDatabaseFactory {
           await safeInvokeMethod<String>(methodGetDatabasesPath);
 
       if (path == null) {
-        throw SqfliteDatabaseException("getDatabasesPath is null", null);
+        throw SqfliteDatabaseException('getDatabasesPath is null', null);
       }
       _databasesPath = path;
     }
     return _databasesPath;
-  }
-
-  @override
-  Future<void> createParentDirectory(String path) async {
-    // needed on iOS
-    if (Platform.isIOS) {
-      path = await fixPath(path);
-      if (isPath(path)) {
-        try {
-          path = dirname(path);
-          // devPrint('createParentDirectory: $path');
-          await Directory(path).create(recursive: true);
-        } catch (_) {}
-      }
-    }
   }
 
   /// path must be non null

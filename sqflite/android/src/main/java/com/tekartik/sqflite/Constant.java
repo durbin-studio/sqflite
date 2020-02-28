@@ -6,6 +6,9 @@ package com.tekartik.sqflite;
 
 public class Constant {
 
+    //  Can be used as the name MethodChannel or to register with
+    static final public String PLUGIN_KEY = "com.tekartik.sqflite";
+
     static final public String METHOD_GET_PLATFORM_VERSION = "getPlatformVersion";
     static final public String METHOD_GET_DATABASES_PATH = "getDatabasesPath";
     static final public String METHOD_DEBUG = "debug";
@@ -17,6 +20,7 @@ public class Constant {
     static final public String METHOD_QUERY = "query";
     static final public String METHOD_UPDATE = "update";
     static final public String METHOD_BATCH = "batch";
+    static final public String METHOD_DELETE_DATABASE = "deleteDatabase";
 
     static final String PARAM_ID = "id";
     static final String PARAM_PATH = "path";

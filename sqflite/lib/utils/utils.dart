@@ -1,4 +1,3 @@
-import 'package:sqflite/src/sqflite_impl.dart';
 import 'package:sqflite/src/utils.dart';
 import 'package:sqflite/src/utils.dart' as impl;
 
@@ -15,12 +14,12 @@ int firstIntValue(List<Map<String, dynamic>> list) {
 }
 
 /// Utility to encode a blob to allow blow query using
-/// "hex(blob_field) = ?", Sqlite.hex([1,2,3])
+/// 'hex(blob_field) = ?', Sqlite.hex([1,2,3])
 String hex(List<int> bytes) {
   final StringBuffer buffer = StringBuffer();
   for (int part in bytes) {
     if (part & 0xff != part) {
-      throw FormatException("$part is not a byte integer");
+      throw FormatException('$part is not a byte integer');
     }
     buffer.write('${part < 16 ? '0' : ''}${part.toRadixString(16)}');
   }
@@ -52,7 +51,7 @@ set lockWarningDuration(Duration duration) =>
 /// Default behavior is to print a message if a command hangs for more than
 /// 10 seconds. Set en empty callback (not null) to prevent it from being
 /// displayed.
-void setLockWarningInfo({Duration duration, void callback()}) {
+void setLockWarningInfo({Duration duration, void Function() callback}) {
   impl.lockWarningDuration = duration ?? impl.lockWarningDuration;
   impl.lockWarningCallback = callback ?? impl.lockWarningCallback;
 }

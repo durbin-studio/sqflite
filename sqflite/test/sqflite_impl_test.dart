@@ -1,12 +1,14 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite/src/exception.dart';
+import 'package:sqflite/src/factory_impl.dart';
+import 'package:sqflite/src/mixin/factory.dart';
 import 'package:sqflite/src/sqflite_impl.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group("sqflite", () {
+  group('sqflite', () {
     const MethodChannel channel = MethodChannel('com.tekartik.sqflite');
 
     final List<MethodCall> log = <MethodCall>[];
@@ -21,7 +23,11 @@ void main() {
       log.clear();
     });
 
-    test("supportsConcurrency", () async {
+    test('databaseFactory', () async {
+      expect(databaseFactory is SqfliteInvokeHandler, isTrue);
+    });
+
+    test('supportsConcurrency', () async {
       expect(supportsConcurrency, isFalse);
     });
 
@@ -32,7 +38,7 @@ void main() {
       final Rows rows = Rows.from(raw);
       final Map<String, dynamic> row = rows.first;
       expect(rows, raw);
-      expect(row, <String, dynamic>{"col": 1});
+      expect(row, <String, dynamic>{'col': 1});
     });
 
     test('fromRawOperationResult', () async {
@@ -40,8 +46,8 @@ void main() {
       expect(
           fromRawOperationResult(<String, dynamic>{
             'result': <dynamic, dynamic>{
-              "columns": <dynamic>["column"],
-              "rows": <dynamic>[
+              'columns': <dynamic>['column'],
+              'rows': <dynamic>[
                 <int>[1]
               ]
             }
@@ -62,21 +68,21 @@ void main() {
     });
     test('ResultSet', () {
       final Map<dynamic, dynamic> raw = <dynamic, dynamic>{
-        "columns": <dynamic>["column"],
-        "rows": <dynamic>[
+        'columns': <dynamic>['column'],
+        'rows': <dynamic>[
           <int>[1]
         ]
       };
       final QueryResultSet queryResultSet = QueryResultSet(<dynamic>[
-        "column"
+        'column'
       ], <dynamic>[
         <dynamic>[1]
       ]);
-      expect(queryResultSet.columnIndex("dummy"), isNull);
-      expect(queryResultSet.columnIndex("column"), 0);
+      expect(queryResultSet.columnIndex('dummy'), isNull);
+      expect(queryResultSet.columnIndex('column'), 0);
       final Map<String, dynamic> row = queryResultSet.first;
       //expect(rows, raw);
-      expect(row, <String, dynamic>{"column": 1});
+      expect(row, <String, dynamic>{'column': 1});
 
       // read only
       try {
@@ -88,10 +94,10 @@ void main() {
       map['column'] = 2;
 
       final Map<dynamic, dynamic> queryResultSetMap = <dynamic, dynamic>{
-        "columns": <dynamic>["id", "name"],
-        "rows": <List<dynamic>>[
-          <dynamic>[1, "item 1"],
-          <dynamic>[2, "item 2"]
+        'columns': <dynamic>['id', 'name'],
+        'rows': <List<dynamic>>[
+          <dynamic>[1, 'item 1'],
+          <dynamic>[2, 'item 2']
         ]
       };
       final List<Map<String, dynamic>> expected = <Map<String, dynamic>>[
@@ -122,7 +128,7 @@ void main() {
       expect(row.length, 1);
       expect(row.keys, <String>['col']);
       expect(row.values, <dynamic>[2]);
-      expect(row, <String, dynamic>{"col": 2});
+      expect(row, <String, dynamic>{'col': 2});
     });
 
     test('lockWarning', () {});

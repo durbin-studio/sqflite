@@ -7,6 +7,7 @@ import android.util.Log;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.io.File;
 
 import static com.tekartik.sqflite.Constant.TAG;
 
@@ -131,5 +132,10 @@ public class Database {
 
     String getThreadLogPrefix() {
         return "[" + getThreadLogTag() + "] ";
+    }
+
+
+    static void deleteDatabase(String path) {
+        SQLiteDatabase.deleteDatabase(new File(path));
     }
 }

@@ -356,7 +356,7 @@ class RawTestPage extends TestPage {
             ["another name", 12345678]);
         print("inserted2: $id");
         int count = await database.rawUpdate(
-            'UPDATE Test SET name = ?, VALUE = ? WHERE name = ?',
+            'UPDATE Test SET name = ?, value = ? WHERE name = ?',
             ["updated name", "9876", "some name"]);
         print("updated: $count");
         expect(count, 1);
@@ -424,7 +424,7 @@ class RawTestPage extends TestPage {
 
       // Update some record
       int count = await database.rawUpdate(
-          'UPDATE Test SET name = ?, VALUE = ? WHERE name = ?',
+          'UPDATE Test SET name = ?, value = ? WHERE name = ?',
           ["updated name", "9876", "some name"]);
       print("updated: $count");
 
@@ -513,14 +513,14 @@ class RawTestPage extends TestPage {
             .execute("CREATE TABLE Test (name TEXT PRIMARY KEY) WITHOUT ROWID");
         int id = await db.insert("Test", {"name": "test"});
         // it seems to always return 1 on Android, 0 on iOS...
-        if (Platform.isIOS) {
+        if (Platform.isIOS || Platform.isMacOS) {
           expect(id, 0);
         } else {
           expect(id, 1);
         }
         id = await db.insert("Test", {"name": "other"});
         // it seems to always return 1
-        if (Platform.isIOS) {
+        if (Platform.isIOS || Platform.isMacOS) {
           expect(id, 0);
         } else {
           expect(id, 1);
