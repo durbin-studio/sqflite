@@ -701,7 +701,7 @@ public class SqflitePlugin implements MethodCallHandler {
                 if (databaseId != null) {
                     Database database = databaseMap.get(databaseId);
                     if (database != null) {
-                        if (!database.sqliteDatabase.isOpen()) {
+                        if (database.sqliteDatabase != null && !database.sqliteDatabase.isOpen()) {
                             if (LogLevel.hasVerboseLevel(logLevel)) {
                                 Log.d(Constant.TAG, database.getThreadLogPrefix() + "single instance database of " + path + " not opened");
                             }
